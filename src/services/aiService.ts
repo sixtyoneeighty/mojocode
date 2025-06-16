@@ -326,6 +326,11 @@ const MCP_TOOLS = [
   }
 ];
 
+// Helper function to flatten tools for OpenAI API
+function flattenTools(tools: typeof MCP_TOOLS) {
+  return tools.map(tool => tool.function);
+}
+
 export class AIService {
   // Enhanced prompt generation using o3 model for strategic thinking
   async enhancePrompt(prompt: string, authNeeds: string, databaseNeeds: string): Promise<string> {
@@ -358,7 +363,7 @@ Return ONLY the enhanced prompt as a complete, detailed description - no additio
         reasoning: {
           effort: 'high'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 3000
       });
@@ -423,7 +428,7 @@ Provide actionable, specific information that enables immediate development star
         reasoning: {
           effort: 'high'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 4000
       });
@@ -493,7 +498,7 @@ Remember: You can now directly create and modify files, but always communicate y
         reasoning: {
           effort: 'high'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 4000
       });
@@ -580,7 +585,7 @@ Create a polished, production-worthy application that demonstrates modern web de
         reasoning: {
           effort: 'high'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 8000
       });
@@ -1019,7 +1024,7 @@ document.addEventListener('keydown', function(e) {
         reasoning: {
           effort: 'medium'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 2000
       });
@@ -1041,7 +1046,7 @@ document.addEventListener('keydown', function(e) {
         reasoning: {
           effort: 'high'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 3000
       });
@@ -1063,7 +1068,7 @@ document.addEventListener('keydown', function(e) {
         reasoning: {
           effort: 'medium'
         },
-        tools: MCP_TOOLS,
+        tools: flattenTools(MCP_TOOLS),
         tool_choice: 'auto',
         max_output_tokens: 2500
       });
