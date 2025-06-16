@@ -206,7 +206,7 @@ ${context ? `CURRENT CONTEXT: ${context}` : ''}
 When you need current documentation or want to research best practices, use the available tools. Always provide practical, implementable solutions.`;
 
       const response = await openai.responses.create({
-        model: 'o1-mini',
+        model: 'o4-mini',
         input: prompt,
         instructions: systemPrompt,
         temperature: 0.3,
@@ -272,7 +272,7 @@ When you need current documentation or want to research best practices, use the 
   async explainCode(code: string, language: string): Promise<string> {
     try {
       const response = await openai.responses.create({
-        model: 'o1-mini',
+        model: 'o4-mini',
         input: `Please explain this ${language} code in detail:\n\n\`\`\`${language}\n${code}\n\`\`\``,
         instructions: 'You are a code explanation expert. Explain the given code in simple terms, highlighting key concepts, functionality, and best practices. Use the get_library_docs tool if you need current documentation about any libraries or frameworks used.',
         temperature: 0.3,
@@ -294,7 +294,7 @@ When you need current documentation or want to research best practices, use the 
   async researchTopic(topic: string): Promise<string> {
     try {
       const response = await openai.responses.create({
-        model: 'o1-mini',
+        model: 'o4-mini',
         input: `Research the following topic and provide comprehensive, up-to-date information: ${topic}`,
         instructions: 'You are a research assistant. Use tavily_search and get_library_docs to gather current information. Provide well-structured, factual content with sources when possible.',
         temperature: 0.3,
