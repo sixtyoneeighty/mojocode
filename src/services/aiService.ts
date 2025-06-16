@@ -176,6 +176,115 @@ const MCP_TOOLS = [
 ];
 
 export class AIService {
+  // Enhanced prompt generation using o3 model for strategic thinking
+  async enhancePrompt(prompt: string, authNeeds: string, databaseNeeds: string): Promise<string> {
+    try {
+      const enhancementPrompt = `As a senior product manager and UX expert, enhance this app idea by adding missing technical details, user experience considerations, and implementation requirements.
+
+ORIGINAL IDEA: "${prompt}"
+
+REQUIREMENTS TO CONSIDER:
+- Authentication needs: ${authNeeds}
+- Database integration: ${databaseNeeds}
+
+Please enhance this prompt to include:
+1. **Core Functionality**: Detailed feature descriptions and user flows
+2. **User Interface**: Specific UI/UX requirements, layout preferences, and visual design direction
+3. **Technical Specifications**: Architecture considerations, data requirements, and integration needs
+4. **User Experience**: Navigation patterns, interaction design, and accessibility requirements
+5. **Visual Design**: Color schemes, typography preferences, and design system requirements
+6. **Performance & Quality**: Loading states, error handling, and optimization considerations
+
+Focus on creating a comprehensive, actionable prompt that includes all necessary details for successful development.
+
+Return ONLY the enhanced prompt as a complete, detailed description - no additional commentary or formatting.`;
+
+      const response = await openai.responses.create({
+        model: 'o3', // Using o3 for strategic planning and enhancement
+        input: enhancementPrompt,
+        instructions: 'You are a senior product strategist with expertise in app development, UX design, and technical architecture. Provide comprehensive, actionable enhancements that bridge business requirements with technical implementation.',
+        temperature: 0.3,
+        reasoning: {
+          effort: 'high'
+        },
+        tools: MCP_TOOLS,
+        tool_choice: 'auto',
+        max_output_tokens: 3000
+      });
+
+      return this.extractContentFromResponse(response);
+    } catch (error) {
+      console.error('Prompt Enhancement Error:', error);
+      throw new Error('Failed to enhance prompt');
+    }
+  }
+
+  // Project planning using o3 model for comprehensive analysis
+  async createProjectPlan(prompt: string, authNeeds: string, databaseNeeds: string): Promise<string> {
+    try {
+      const planningPrompt = `As a technical lead and software architect, analyze this app concept and create a comprehensive project plan.
+
+APP CONCEPT: "${prompt}"
+
+REQUIREMENTS:
+- Authentication: ${authNeeds}
+- Database: ${databaseNeeds}
+
+Create a detailed project analysis with the following structure:
+
+PROJECT NAME: [Suggest a memorable, brandable name that reflects the app's purpose]
+
+DESCRIPTION: [Write a compelling 2-3 sentence summary that captures the app's value proposition and target audience]
+
+CORE FEATURES:
+- [List 5-7 essential features that deliver the primary user value]
+- [Include user authentication and data management features if needed]
+- [Focus on MVP features that can be implemented in the initial version]
+
+TECH STACK:
+- [Specify frontend technologies (HTML5, CSS3, JavaScript, frameworks)]
+- [Include any necessary APIs, libraries, or third-party integrations]
+- [Consider authentication and database technologies if required]
+- [Mention responsive design and accessibility tools]
+
+FILE STRUCTURE:
+- [List main files that will be created (HTML, CSS, JS)]
+- [Include any configuration files or additional assets needed]
+- [Consider modular organization for maintainability]
+
+CLARIFICATIONS NEEDED:
+- [Identify any ambiguous requirements that need user input]
+- [List assumptions that should be validated]
+- [Highlight any complex features that might need simplification]
+
+COMPLEXITY: [Rate as Simple/Medium/Complex based on:]
+- Simple: Basic UI, minimal interactivity, no external APIs
+- Medium: Multiple features, some state management, possible API integration
+- Complex: Advanced functionality, real-time features, complex data relationships
+
+Provide actionable, specific information that enables immediate development start.`;
+
+      const response = await openai.responses.create({
+        model: 'o3', // Using o3 for strategic planning and analysis
+        input: planningPrompt,
+        instructions: 'You are a senior software architect and project lead. Use advanced reasoning to create comprehensive, actionable project plans. Research current best practices and technologies using available tools when needed.',
+        temperature: 0.3,
+        reasoning: {
+          effort: 'high'
+        },
+        tools: MCP_TOOLS,
+        tool_choice: 'auto',
+        max_output_tokens: 4000
+      });
+
+      return this.extractContentFromResponse(response);
+    } catch (error) {
+      console.error('Project Planning Error:', error);
+      throw new Error('Failed to create project plan');
+    }
+  }
+
+  // Regular chat and code assistance using o4-mini
   async generateCode(prompt: string, context?: string): Promise<AIResponse> {
     try {
       const systemPrompt = `You are MojoCode AI, an expert software developer and coding assistant specialized in full-stack development.
@@ -206,7 +315,7 @@ ${context ? `CURRENT CONTEXT: ${context}` : ''}
 When you need current documentation or want to research best practices, use the available tools. Always provide practical, implementable solutions.`;
 
       const response = await openai.responses.create({
-        model: 'o4-mini',
+        model: 'o4-mini', // Using o4-mini for code generation and assistance
         input: prompt,
         instructions: systemPrompt,
         temperature: 0.3,
@@ -234,6 +343,7 @@ When you need current documentation or want to research best practices, use the 
     }
   }
 
+  // App generation using o4-mini for code implementation
   async generateApp(prompt: string): Promise<{
     html: string;
     css: string;
@@ -242,11 +352,11 @@ When you need current documentation or want to research best practices, use the 
     description: string;
   }> {
     try {
-      const generationPrompt = `Create a complete, functional, and beautiful web application based on this detailed description:
+      const generationPrompt = `Create a complete, functional, and beautiful web application based on this detailed specification:
 
 ${prompt}
 
-REQUIREMENTS:
+DEVELOPMENT REQUIREMENTS:
 - Generate clean, semantic HTML5 with proper structure and accessibility
 - Create modern, responsive CSS with beautiful design and animations
 - Include interactive JavaScript functionality with error handling
@@ -258,10 +368,13 @@ REQUIREMENTS:
 - Include proper form validation and user feedback
 - Add loading states and micro-interactions for better UX
 
-STRUCTURE YOUR RESPONSE AS:
-1. HTML - Complete HTML document with proper head, meta tags, and semantic structure
-2. CSS - Comprehensive styling with responsive design, animations, and modern techniques
-3. JavaScript - Interactive functionality with proper event handling and error management
+TECHNICAL IMPLEMENTATION:
+- Use vanilla HTML, CSS, and JavaScript (no frameworks)
+- Implement modern ES6+ JavaScript features
+- Create reusable CSS classes and modular code structure
+- Include proper error handling and user feedback
+- Optimize for performance and accessibility
+- Use semantic HTML5 elements for better SEO and accessibility
 
 DESIGN GUIDELINES:
 - Use a modern, professional design system approach
@@ -269,15 +382,15 @@ DESIGN GUIDELINES:
 - Add subtle animations for enhanced user experience
 - Ensure proper spacing, typography hierarchy, and visual balance
 - Make it visually impressive and user-friendly
-- Use modern color palettes and design trends
-- Ensure excellent performance and optimization
+- Use modern color palettes and contemporary design trends
+- Ensure excellent contrast ratios and readability
 
-Create something that would be worthy of production use and showcase modern web development capabilities.`;
+Create a polished, production-worthy application that demonstrates modern web development capabilities and best practices.`;
 
       const response = await openai.responses.create({
-        model: 'o4-mini',
+        model: 'o4-mini', // Using o4-mini for actual code generation
         input: generationPrompt,
-        instructions: 'You are an expert full-stack developer creating production-ready web applications. Use the latest web standards, best practices, and research current trends using available tools. Focus on creating beautiful, functional, and accessible applications.',
+        instructions: 'You are an expert full-stack developer creating production-ready web applications. Use the latest web standards, research current best practices using available tools, and focus on creating beautiful, functional, and accessible applications.',
         temperature: 0.3,
         reasoning: {
           effort: 'high'
@@ -714,7 +827,7 @@ document.addEventListener('keydown', function(e) {
   async explainCode(code: string, language: string): Promise<string> {
     try {
       const response = await openai.responses.create({
-        model: 'o4-mini',
+        model: 'o4-mini', // Using o4-mini for code explanation
         input: `Please explain this ${language} code in detail:\n\n\`\`\`${language}\n${code}\n\`\`\``,
         instructions: 'You are a code explanation expert. Explain the given code in simple terms, highlighting key concepts, functionality, and best practices. Use the get_library_docs tool if you need current documentation about any libraries or frameworks used.',
         temperature: 0.3,
@@ -736,7 +849,7 @@ document.addEventListener('keydown', function(e) {
   async researchTopic(topic: string): Promise<string> {
     try {
       const response = await openai.responses.create({
-        model: 'o4-mini',
+        model: 'o4-mini', // Using o4-mini for research tasks
         input: `Research the following topic and provide comprehensive, up-to-date information: ${topic}`,
         instructions: 'You are a research assistant. Use tavily_search and get_library_docs to gather current information. Provide well-structured, factual content with sources when possible.',
         temperature: 0.3,
@@ -758,7 +871,7 @@ document.addEventListener('keydown', function(e) {
   async analyzeWebsite(url: string): Promise<string> {
     try {
       const response = await openai.responses.create({
-        model: 'o4-mini',
+        model: 'o4-mini', // Using o4-mini for analysis tasks
         input: `Analyze the website at ${url}. Extract key information, technologies used, and provide insights about its structure and content.`,
         instructions: 'You are a web analysis expert. Use firecrawl_scrape to extract content and analyze the website structure, technologies, and content quality.',
         temperature: 0.3,

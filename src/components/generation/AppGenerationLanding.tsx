@@ -28,7 +28,8 @@ import {
   Database,
   Shield,
   FileText,
-  Edit3
+  Edit3,
+  Brain
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -112,26 +113,11 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
     
     setIsEnhancing(true);
     try {
-      const enhancedResponse = await aiService.generateCode(
-        `Enhance this app idea by adding missing details, technical specifications, and user experience considerations: "${prompt}". 
-
-        Consider the following requirements:
-        - Authentication needs: ${needsAuth}
-        - Database integration: ${needsDatabase}
-        
-        Provide a comprehensive prompt that includes:
-        - Core functionality and features
-        - User interface requirements  
-        - User experience flow
-        - Visual design preferences
-        - Technical considerations
-        
-        Return only the enhanced prompt, nothing else.`,
-        'You are a product manager and UX expert helping to enhance app ideas for development.'
-      );
+      // Using the new enhancePrompt method that uses o3 model
+      const enhancedPrompt = await aiService.enhancePrompt(prompt, needsAuth, needsDatabase);
       
-      setPrompt(enhancedResponse.content);
-      toast.success('Prompt enhanced with additional details!');
+      setPrompt(enhancedPrompt);
+      toast.success('✨ Prompt enhanced with AI insights!');
     } catch (error) {
       toast.error('Failed to enhance prompt');
     } finally {
@@ -146,38 +132,11 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
     setShowReview(true);
     
     try {
-      const planningPrompt = `Analyze this app idea and create a detailed project plan: "${prompt}"
-
-      Requirements to consider:
-      - Authentication: ${needsAuth}
-      - Database: ${needsDatabase}
-
-      Please provide a structured analysis in the following format:
-
-      PROJECT NAME: [Suggest a concise, catchy name]
-      
-      DESCRIPTION: [2-3 sentence summary of the app]
-      
-      CORE FEATURES:
-      - [List 4-6 main features]
-      
-      TECH STACK:
-      - [List technologies, frameworks, and tools needed]
-      
-      FILE STRUCTURE:
-      - [List main files that will be created]
-      
-      CLARIFICATIONS NEEDED:
-      - [Any unclear requirements or questions that should be addressed]
-      
-      COMPLEXITY: [Simple/Medium/Complex - based on features and technical requirements]
-
-      Focus on creating a clear, actionable plan that a developer could follow.`;
-
-      const response = await aiService.generateCode(planningPrompt);
+      // Using the new createProjectPlan method that uses o3 model
+      const planContent = await aiService.createProjectPlan(prompt, needsAuth, needsDatabase);
       
       // Parse the response to extract structured plan
-      const plan = parseProjectPlan(response.content);
+      const plan = parseProjectPlan(planContent);
       setProjectPlan(plan);
       
     } catch (error) {
@@ -296,7 +255,7 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
       setActiveFile(project.files[0]);
       onProjectCreated();
       
-      toast.success('App generated successfully!');
+      toast.success('🚀 App generated successfully!');
     } catch (error) {
       toast.error('Failed to generate app');
       console.error('Generation error:', error);
@@ -319,9 +278,13 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
         <div className="max-w-4xl mx-auto px-6 py-12 w-full">
           <div className="text-center mb-8">
+            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full px-4 py-2 mb-6">
+              <Brain className="w-4 h-4 text-purple-400" />
+              <span className="text-sm text-purple-300">Powered by o3 Advanced Reasoning</span>
+            </div>
             <h1 className="text-4xl font-bold text-white mb-4">Project Review</h1>
             <p className="text-xl text-gray-300">
-              Review the plan before we start building your app
+              Review the comprehensive plan before we start building your app
             </p>
           </div>
 
@@ -428,7 +391,7 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
                 {isGenerating ? (
                   <>
                     <Loader className="w-5 h-5 animate-spin" />
-                    <span>Generating App...</span>
+                    <span>Generating with o4-mini...</span>
                   </>
                 ) : (
                   <>
@@ -492,15 +455,20 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
                 <button
                   onClick={enhancePrompt}
                   disabled={isEnhancing || isPlanning || isGenerating}
-                  className="absolute top-4 right-4 flex items-center space-x-1 px-3 py-1.5 bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 rounded-lg hover:bg-indigo-600/30 transition-all disabled:opacity-50 text-sm"
-                  title="Enhance prompt with AI"
+                  className="absolute top-4 right-4 flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 text-purple-300 rounded-lg hover:bg-purple-600/30 transition-all disabled:opacity-50 text-sm"
+                  title="Enhance prompt with o3 AI"
                 >
                   {isEnhancing ? (
-                    <Loader className="w-4 h-4 animate-spin" />
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      <span>Enhancing...</span>
+                    </>
                   ) : (
-                    <Wand2 className="w-4 h-4" />
+                    <>
+                      <Brain className="w-4 h-4" />
+                      <span>Enhance with o3</span>
+                    </>
                   )}
-                  <span>Enhance</span>
                 </button>
               )}
             </div>
@@ -564,8 +532,8 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
             >
               {isPlanning ? (
                 <>
-                  <Loader className="w-6 h-6 animate-spin" />
-                  <span>Creating project plan...</span>
+                  <Brain className="w-6 h-6 animate-pulse" />
+                  <span>Creating plan with o3...</span>
                 </>
               ) : (
                 <>
@@ -575,6 +543,23 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
                 </>
               )}
             </button>
+          </div>
+        </div>
+
+        {/* AI Model Information */}
+        <div className="mt-6 flex items-center justify-center space-x-8 text-sm">
+          <div className="flex items-center space-x-2 text-purple-300">
+            <Brain className="w-4 h-4" />
+            <span>o3 Planning</span>
+          </div>
+          <div className="text-gray-500">•</div>
+          <div className="flex items-center space-x-2 text-indigo-300">
+            <Sparkles className="w-4 h-4" />
+            <span>o4-mini Generation</span>
+          </div>
+          <div className="text-gray-500">•</div>
+          <div className="flex items-center space-x-2 text-gray-400">
+            <span>High reasoning effort</span>
           </div>
         </div>
 
