@@ -337,7 +337,6 @@ Return ONLY the enhanced prompt as a complete, detailed description - no additio
         model: 'o3', // Using o3 for strategic planning and enhancement
         input: enhancementPrompt,
         instructions: 'You are a senior product strategist with expertise in app development, UX design, and technical architecture. Provide comprehensive, actionable enhancements that bridge business requirements with technical implementation.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -402,7 +401,6 @@ Provide actionable, specific information that enables immediate development star
         model: 'o3', // Using o3 for strategic planning and analysis
         input: planningPrompt,
         instructions: 'You are a senior software architect and project lead. Use advanced reasoning to create comprehensive, actionable project plans. Research current best practices and technologies using available tools when needed.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -472,7 +470,6 @@ Remember: You can now directly create and modify files, but always communicate y
         model: 'o4-mini', // Using o4-mini for code generation and assistance
         input: prompt,
         instructions: systemPrompt,
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -559,7 +556,6 @@ Create a polished, production-worthy application that demonstrates modern web de
         model: 'o4-mini', // Using o4-mini for actual code generation
         input: generationPrompt,
         instructions: 'You are an expert full-stack developer with autonomous file operation capabilities. Use write_file tools to create the project files directly. Research current best practices using available tools. Always explain what you\'re building and why. Focus on creating beautiful, functional, and accessible applications.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -998,7 +994,6 @@ document.addEventListener('keydown', function(e) {
         model: 'o4-mini', // Using o4-mini for code explanation
         input: `Please explain this ${language} code in detail:\n\n\`\`\`${language}\n${code}\n\`\`\``,
         instructions: 'You are a code explanation expert with autonomous capabilities. Explain the given code in simple terms, highlighting key concepts, functionality, and best practices. Use get_library_docs if you need current documentation about any libraries or frameworks used. Offer to make improvements if you see opportunities.',
-        temperature: 0.3,
         reasoning: {
           effort: 'medium'
         },
@@ -1020,7 +1015,6 @@ document.addEventListener('keydown', function(e) {
         model: 'o4-mini', // Using o4-mini for research tasks
         input: `Research the following topic and provide comprehensive, up-to-date information: ${topic}`,
         instructions: 'You are a research assistant with autonomous capabilities. Use tavily_search and get_library_docs to gather current information. Provide well-structured, factual content with sources when possible. If you find useful code examples or implementations, offer to create files with them.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -1042,7 +1036,6 @@ document.addEventListener('keydown', function(e) {
         model: 'o4-mini', // Using o4-mini for analysis tasks
         input: `Analyze the website at ${url}. Extract key information, technologies used, and provide insights about its structure and content. If you find interesting patterns or implementations, offer to recreate them.`,
         instructions: 'You are a web analysis expert with autonomous capabilities. Use firecrawl_scrape to extract content and analyze the website structure, technologies, and content quality. If you discover useful code patterns or features, offer to implement similar functionality.',
-        temperature: 0.3,
         reasoning: {
           effort: 'medium'
         },
