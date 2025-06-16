@@ -217,7 +217,7 @@ What would you like to build today?`,
           <div className="text-xs text-gray-500 flex items-center space-x-4">
             <span className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>o1-mini</span>
+              <span>o4-mini</span>
             </span>
             <span>•</span>
             <span>High reasoning</span>
