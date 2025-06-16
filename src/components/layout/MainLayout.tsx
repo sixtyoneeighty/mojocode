@@ -11,7 +11,7 @@ export const MainLayout: React.FC = () => {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 1024); // Changed from 768 to 1024 for better tablet support
     };
 
     checkMobile();
@@ -20,29 +20,39 @@ export const MainLayout: React.FC = () => {
   }, [setIsMobile]);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900">
+    <div className="h-screen flex flex-col bg-slate-950">
       <Header />
       
       <div className="flex-1 flex overflow-hidden">
-        <ProjectSidebar />
+        {/* Project Sidebar - Always visible on desktop */}
+        {!isMobile && (
+          <div className="w-72 flex-shrink-0">
+            <ProjectSidebar />
+          </div>
+        )}
         
         {isMobile ? (
-          // Mobile: Show one panel at a time
-          <div className="flex-1">
+          // Mobile: Show one panel at a time with better styling
+          <div className="flex-1 flex flex-col">
             {activePanel === 'chat' && <ChatPanel />}
             {activePanel === 'editor' && <EditorPanel />}
             {activePanel === 'preview' && <PreviewPanel />}
           </div>
         ) : (
-          // Desktop: Show all three panels
-          <div className="flex-1 grid grid-cols-3 gap-0">
-            <div className="border-r border-slate-700">
+          // Desktop: Show main content area with proper spacing
+          <div className="flex-1 flex">
+            {/* Chat Panel */}
+            <div className="w-96 flex-shrink-0 border-r border-slate-700/50">
               <ChatPanel />
             </div>
-            <div className="border-r border-slate-700">
+            
+            {/* Editor Panel */}
+            <div className="flex-1 border-r border-slate-700/50">
               <EditorPanel />
             </div>
-            <div>
+            
+            {/* Preview Panel */}
+            <div className="w-96 flex-shrink-0">
               <PreviewPanel />
             </div>
           </div>

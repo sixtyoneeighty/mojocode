@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../../stores/useAppStore';
-import { RefreshCw, ExternalLink, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { RefreshCw, ExternalLink, Monitor, Smartphone, Tablet, Eye } from 'lucide-react';
 
 export const PreviewPanel: React.FC = () => {
   const { currentProject } = useAppStore();
@@ -61,24 +61,29 @@ export const PreviewPanel: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-slate-900">
-      <div className="flex items-center justify-between p-4 border-b border-slate-700">
-        <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold text-white">Preview</h2>
-          {currentProject && (
-            <span className="text-sm text-gray-400">
-              {currentProject.name}
-            </span>
-          )}
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-slate-800 rounded-lg">
+            <Eye className="w-5 h-5 text-indigo-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Preview</h2>
+            {currentProject && (
+              <p className="text-sm text-gray-400">{currentProject.name}</p>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          {/* Viewport Toggle */}
           <div className="flex bg-slate-800 rounded-lg p-1">
             <button
               onClick={() => setViewMode('desktop')}
-              className={`p-2 rounded-md transition-colors ${
+              className={`p-2 rounded-md transition-all duration-200 ${
                 viewMode === 'desktop'
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
               }`}
               title="Desktop view"
             >
@@ -86,10 +91,10 @@ export const PreviewPanel: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('tablet')}
-              className={`p-2 rounded-md transition-colors ${
+              className={`p-2 rounded-md transition-all duration-200 ${
                 viewMode === 'tablet'
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
               }`}
               title="Tablet view"
             >
@@ -97,10 +102,10 @@ export const PreviewPanel: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('mobile')}
-              className={`p-2 rounded-md transition-colors ${
+              className={`p-2 rounded-md transition-all duration-200 ${
                 viewMode === 'mobile'
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
               }`}
               title="Mobile view"
             >
@@ -108,9 +113,10 @@ export const PreviewPanel: React.FC = () => {
             </button>
           </div>
 
+          {/* Refresh Button */}
           <button
             onClick={handleRefresh}
-            className={`p-2 text-gray-400 hover:text-white transition-all duration-200 ${
+            className={`p-2.5 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200 ${
               isLoading ? 'animate-spin' : ''
             }`}
             title="Refresh preview"
@@ -120,11 +126,12 @@ export const PreviewPanel: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 p-4 overflow-auto">
+      {/* Preview Content */}
+      <div className="flex-1 p-6 overflow-auto bg-slate-850">
         {currentProject ? (
           <div className="h-full flex items-center justify-center">
             <div
-              className="bg-white rounded-lg shadow-2xl overflow-hidden transition-all duration-300"
+              className="bg-white rounded-xl shadow-2xl overflow-hidden transition-all duration-300"
               style={{
                 width: width,
                 height: height,
@@ -145,10 +152,14 @@ export const PreviewPanel: React.FC = () => {
           </div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
-            <div className="text-center">
-              <Monitor className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No project to preview</p>
-              <p className="text-sm mt-2">Create or select a project to see the preview</p>
+            <div className="text-center max-w-md">
+              <div className="p-6 bg-slate-800 rounded-2xl inline-block mb-6">
+                <Monitor className="w-12 h-12 mx-auto opacity-50" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No project to preview</h3>
+              <p className="text-gray-400">
+                Create or select a project to see the live preview of your code
+              </p>
             </div>
           </div>
         )}

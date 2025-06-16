@@ -3,7 +3,7 @@ import { Editor } from '@monaco-editor/react';
 import { useAppStore } from '../../stores/useAppStore';
 import { FileTree } from './FileTree';
 import { EditorToolbar } from './EditorToolbar';
-import { File, FolderOpen } from 'lucide-react';
+import { File, FolderOpen, Code2, Sparkles } from 'lucide-react';
 
 export const EditorPanel: React.FC = () => {
   const { currentProject, activeFile, updateFileContent } = useAppStore();
@@ -44,10 +44,18 @@ export const EditorPanel: React.FC = () => {
   if (!currentProject) {
     return (
       <div className="flex items-center justify-center h-full bg-slate-900 text-gray-400">
-        <div className="text-center">
-          <File className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No project selected</p>
-          <p className="text-sm mt-2">Create or select a project to start coding</p>
+        <div className="text-center max-w-md">
+          <div className="p-6 bg-slate-800 rounded-2xl inline-block mb-6">
+            <Code2 className="w-12 h-12 mx-auto opacity-50" />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-3">No project selected</h3>
+          <p className="text-gray-400 mb-6">
+            Create or select a project from the sidebar to start coding with AI assistance
+          </p>
+          <div className="flex items-center justify-center space-x-2 text-sm text-indigo-400">
+            <Sparkles className="w-4 h-4" />
+            <span>AI-powered code generation ready</span>
+          </div>
         </div>
       </div>
     );
@@ -56,11 +64,11 @@ export const EditorPanel: React.FC = () => {
   return (
     <div className="flex h-full bg-slate-900">
       {showFileTree && (
-        <div className="w-64 border-r border-slate-700 bg-slate-800">
-          <div className="p-3 border-b border-slate-700">
+        <div className="w-64 border-r border-slate-700/50 bg-slate-850">
+          <div className="p-4 border-b border-slate-700/50">
             <div className="flex items-center space-x-2">
               <FolderOpen className="w-5 h-5 text-indigo-400" />
-              <span className="text-white font-medium">{currentProject.name}</span>
+              <span className="text-white font-semibold">{currentProject.name}</span>
             </div>
           </div>
           <FileTree project={currentProject} />
@@ -83,7 +91,7 @@ export const EditorPanel: React.FC = () => {
               theme="vs-dark"
               options={{
                 fontSize: 14,
-                fontFamily: 'JetBrains Mono, Fira Code, monospace',
+                fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
                 lineNumbers: 'on',
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
@@ -95,14 +103,25 @@ export const EditorPanel: React.FC = () => {
                 guides: {
                   indentation: true,
                   bracketPairs: true
-                }
+                },
+                padding: { top: 20, bottom: 20 },
+                smoothScrolling: true,
+                cursorBlinking: 'smooth',
+                renderLineHighlight: 'gutter',
+                selectionHighlight: false,
+                occurrencesHighlight: false
               }}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">
-              <div className="text-center">
-                <File className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Select a file to start editing</p>
+              <div className="text-center max-w-md">
+                <div className="p-6 bg-slate-800 rounded-2xl inline-block mb-6">
+                  <File className="w-12 h-12 mx-auto opacity-50" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-3">Select a file to edit</h3>
+                <p className="text-gray-400">
+                  Choose a file from the file tree or create a new one to start coding
+                </p>
               </div>
             </div>
           )}
