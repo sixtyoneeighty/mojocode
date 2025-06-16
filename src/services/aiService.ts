@@ -316,7 +316,7 @@ When you need current documentation or want to research best practices, use the 
   async analyzeWebsite(url: string): Promise<string> {
     try {
       const response = await openai.responses.create({
-        model: 'o1-mini',
+        model: 'o4-mini',
         input: `Analyze the website at ${url}. Extract key information, technologies used, and provide insights about its structure and content.`,
         instructions: 'You are a web analysis expert. Use firecrawl_scrape to extract content and analyze the website structure, technologies, and content quality.',
         temperature: 0.3,
