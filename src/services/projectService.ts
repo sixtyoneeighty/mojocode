@@ -112,6 +112,49 @@ document.addEventListener('DOMContentLoaded', function() {
     return data;
   }
 
+  async createProjectWithCode(name: string, description: string, html: string, css: string, javascript: string): Promise<Project> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const files: ProjectFile[] = [
+      {
+        id: 'html-' + Date.now(),
+        name: 'index.html',
+        content: html,
+        language: 'html',
+        path: '/index.html'
+      },
+      {
+        id: 'css-' + Date.now() + 1,
+        name: 'style.css',
+        content: css,
+        language: 'css',
+        path: '/style.css'
+      },
+      {
+        id: 'js-' + Date.now() + 2,
+        name: 'script.js',
+        content: javascript,
+        language: 'javascript',
+        path: '/script.js'
+      }
+    ];
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        name,
+        description,
+        files,
+        user_id: user.id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async getProjects(): Promise<Project[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');

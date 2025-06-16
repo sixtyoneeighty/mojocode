@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAppStore } from '../../stores/useAppStore';
 import { supabase } from '../../lib/supabase';
-import { Sparkles, User, LogOut, Settings, Menu, Code2 } from 'lucide-react';
+import { Sparkles, User, LogOut, Settings, Menu, Code2, Home } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const Header: React.FC = () => {
-  const { user, activePanel, setActivePanel, isMobile } = useAppStore();
+  const { user, activePanel, setActivePanel, isMobile, currentProject, setCurrentProject, setActiveFile } = useAppStore();
 
   const handleLogout = async () => {
     try {
@@ -14,6 +14,11 @@ export const Header: React.FC = () => {
     } catch (error) {
       toast.error('Error logging out');
     }
+  };
+
+  const handleBackToLanding = () => {
+    setCurrentProject(null);
+    setActiveFile(null);
   };
 
   return (
@@ -27,12 +32,24 @@ export const Header: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">MojoCode</h1>
-              <p className="text-xs text-gray-400">AI-Powered IDE</p>
+              <p className="text-xs text-gray-400">AI-Powered App Development</p>
             </div>
           </div>
+
+          {/* Back to Landing Button */}
+          {currentProject && (
+            <button
+              onClick={handleBackToLanding}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200"
+              title="Back to app generation"
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-sm">New App</span>
+            </button>
+          )}
           
           {/* Mobile Navigation */}
-          {isMobile && (
+          {isMobile && currentProject && (
             <div className="flex items-center space-x-1 bg-slate-800 rounded-lg p-1">
               <button
                 onClick={() => setActivePanel('chat')}

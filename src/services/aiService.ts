@@ -234,6 +234,161 @@ When you need current documentation or want to research best practices, use the 
     }
   }
 
+  async generateApp(prompt: string): Promise<{
+    html: string;
+    css: string;
+    javascript: string;
+    projectName: string;
+    description: string;
+  }> {
+    try {
+      const generationPrompt = `Create a complete, functional, and beautiful web application based on this description: "${prompt}"
+
+REQUIREMENTS:
+- Generate clean, semantic HTML5 with proper structure
+- Create modern, responsive CSS with a beautiful design
+- Include interactive JavaScript functionality
+- Use a cohesive color scheme and typography
+- Follow accessibility standards (ARIA labels, semantic tags)
+- Make it production-ready and polished
+- Use modern CSS features (Grid, Flexbox, custom properties)
+- Ensure mobile-first responsive design
+
+STRUCTURE:
+Return the code in clearly marked sections:
+1. HTML - Complete HTML document with proper head and body
+2. CSS - Comprehensive styling with responsive design
+3. JavaScript - Interactive functionality and any needed logic
+
+DESIGN GUIDELINES:
+- Use a modern, professional color palette
+- Include hover effects and smooth transitions
+- Add subtle animations for better UX
+- Ensure proper spacing and typography hierarchy
+- Make it visually appealing and user-friendly
+
+Create something impressive that would be worthy of production use.`;
+
+      const response = await openai.responses.create({
+        model: 'o4-mini',
+        input: generationPrompt,
+        instructions: 'You are an expert full-stack developer creating production-ready web applications. Use the latest web standards and best practices. Research current trends if needed using available tools.',
+        temperature: 0.3,
+        reasoning: {
+          effort: 'high'
+        },
+        tools: MCP_TOOLS,
+        tool_choice: 'auto',
+        max_output_tokens: 6000
+      });
+
+      const content = this.extractContentFromResponse(response);
+      
+      // Parse the response to extract HTML, CSS, and JavaScript
+      const { html, css, javascript } = this.parseGeneratedCode(content);
+      
+      // Generate project name and description
+      const projectName = this.generateProjectName(prompt);
+      const description = `AI-generated app: ${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}`;
+
+      return {
+        html,
+        css,
+        javascript,
+        projectName,
+        description
+      };
+    } catch (error) {
+      console.error('App Generation Error:', error);
+      throw new Error('Failed to generate app');
+    }
+  }
+
+  private parseGeneratedCode(content: string): { html: string; css: string; javascript: string } {
+    const htmlMatch = content.match(/```(?:html)?\n([\s\S]*?)\n```/i);
+    const cssMatch = content.match(/```(?:css)?\n([\s\S]*?)\n```/i);
+    const jsMatch = content.match(/```(?:javascript|js)?\n([\s\S]*?)\n```/i);
+
+    const html = htmlMatch?.[1] || this.generateDefaultHTML();
+    const css = cssMatch?.[1] || this.generateDefaultCSS();
+    const javascript = jsMatch?.[1] || this.generateDefaultJS();
+
+    return { html, css, javascript };
+  }
+
+  private generateProjectName(prompt: string): string {
+    const words = prompt.split(' ').filter(word => word.length > 2);
+    const significantWords = words.slice(0, 3);
+    return significantWords.map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ') + ' App';
+  }
+
+  private generateDefaultHTML(): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Welcome to My App</h1>
+        </header>
+        <main>
+            <p>Your app content goes here.</p>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>`;
+  }
+
+  private generateDefaultCSS(): string {
+    return `* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}`;
+  }
+
+  private generateDefaultJS(): string {
+    return `console.log('App loaded successfully!');
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add your JavaScript functionality here
+    console.log('DOM content loaded');
+});`;
+  }
+
   private extractContentFromResponse(response: any): string {
     // Handle the response format from OpenAI Responses API
     if (response.output && Array.isArray(response.output)) {
