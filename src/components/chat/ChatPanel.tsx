@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../../stores/useAppStore';
 import { aiService } from '../../services/aiService';
 import { ChatMessage } from './ChatMessage';
-import { Send, Bot, Loader, Sparkles, Search, Globe, Database, FileText } from 'lucide-react';
+import { Send, Bot, Loader, Sparkles, Search, Globe, Database, FileText, Wrench, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ChatPanel: React.FC = () => {
@@ -14,13 +14,19 @@ export const ChatPanel: React.FC = () => {
     role: 'user' | 'assistant';
     content: string;
     timestamp: string;
+    toolCalls?: Array<{
+      name: string;
+      parameters: any;
+      result?: any;
+      status?: 'pending' | 'completed' | 'failed' | 'needs_confirmation';
+    }>;
   }>>([
     {
       id: '1',
       role: 'assistant',
-      content: `🚀 **Welcome to MojoCode AI!** 
+      content: `🚀 **Welcome to MojoCode AI - Enhanced with Autonomous Capabilities!** 
 
-I'm your intelligent coding assistant with superpowers:
+I'm your intelligent coding assistant with advanced autonomous powers:
 
 **🔧 Core Capabilities:**
 - Write and explain code in any language
@@ -28,19 +34,29 @@ I'm your intelligent coding assistant with superpowers:
 - Debug and optimize your code
 - Provide architectural guidance
 
-**🌐 Enhanced Tools:**
+**🤖 NEW: Autonomous Operations**
+- **File Management**: I can create, edit, and organize files directly
+- **Smart Automation**: Handle routine tasks automatically
+- **Transparent Communication**: I'll always explain what I'm doing and why
+- **Impact Assessment**: I'll ask for confirmation on significant changes
+
+**🌐 Enhanced Research Tools:**
 - **Context7**: Get the latest documentation for any library/framework
 - **Tavily**: Research topics with AI-powered web search
 - **Firecrawl**: Extract and analyze content from websites
 - **Supabase**: Database design and query assistance
 
-**💡 Quick Actions:** Try these commands:
-- "Research the latest React 18 features"
-- "Analyze this website: [URL]"
-- "Get documentation for Next.js routing"
-- "Help me design a user authentication database"
+**💡 What I Can Do Autonomously:**
+- Create new files and project structures (✅ Auto)
+- Install safe dependencies (✅ Auto)
+- Make small code improvements (✅ Auto)
+- Major refactoring or deletions (⚠️ Asks Permission)
+- Risky terminal commands (⚠️ Asks Permission)
 
-What would you like to build today?`,
+**💬 Communication Promise:**
+I'll always tell you what I'm doing, why I'm doing it, and get your approval for anything that could significantly impact your project.
+
+Ready to build something amazing together?`,
       timestamp: new Date().toISOString()
     }
   ]);
@@ -76,6 +92,11 @@ What would you like to build today?`,
       icon: <Database className="w-4 h-4" />,
       label: "Database Help",
       prompt: "Help me design a database for "
+    },
+    {
+      icon: <Wrench className="w-4 h-4" />,
+      label: "Auto-Fix Code",
+      prompt: "Analyze my current code and automatically fix any issues you find"
     }
   ];
 
@@ -112,7 +133,8 @@ What would you like to build today?`,
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
         content: response.content,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        toolCalls: response.toolCalls || []
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -134,24 +156,35 @@ What would you like to build today?`,
           <div>
             <h2 className="text-lg font-semibold text-white">MojoCode AI</h2>
             <p className="text-sm text-gray-400">
-              {isTyping ? 'Processing with AI tools...' : 'Enhanced with MCP servers'}
+              {isTyping ? 'Working autonomously...' : 'Enhanced with autonomous capabilities'}
             </p>
           </div>
         </div>
         
-        <button
-          onClick={() => setShowQuickActions(!showQuickActions)}
-          className="p-2 text-gray-400 hover:text-white transition-colors"
-          title="Quick Actions"
-        >
-          <Sparkles className="w-5 h-5" />
-        </button>
+        <div className="flex items-center space-x-2">
+          {/* Autonomous Status Indicator */}
+          <div className="flex items-center space-x-1 px-2 py-1 bg-slate-800 rounded-lg">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-400">Autonomous</span>
+          </div>
+          
+          <button
+            onClick={() => setShowQuickActions(!showQuickActions)}
+            className="p-2 text-gray-400 hover:text-white transition-colors"
+            title="Quick Actions"
+          >
+            <Sparkles className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {showQuickActions && (
         <div className="p-4 border-b border-slate-700 bg-slate-800">
-          <p className="text-sm text-gray-300 mb-3">Quick Actions:</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex items-center space-x-2 mb-3">
+            <Wrench className="w-4 h-4 text-indigo-400" />
+            <p className="text-sm text-gray-300">Quick Actions (Autonomous Capabilities):</p>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
             {quickActions.map((action, index) => (
               <button
                 key={index}
@@ -160,8 +193,17 @@ What would you like to build today?`,
               >
                 {action.icon}
                 <span className="text-sm text-gray-300">{action.label}</span>
+                {action.label.includes('Auto') && (
+                  <span className="text-xs bg-green-600 text-white px-1 rounded">AUTO</span>
+                )}
               </button>
             ))}
+          </div>
+          <div className="mt-3 p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-center space-x-2 text-blue-300 text-xs">
+              <AlertCircle className="w-3 h-3" />
+              <span>I'll automatically handle safe operations and ask permission for risky changes</span>
+            </div>
           </div>
         </div>
       )}
@@ -178,7 +220,7 @@ What would you like to build today?`,
             </div>
             <div className="flex items-center space-x-2">
               <Loader className="w-4 h-4 animate-spin text-indigo-400" />
-              <span className="text-gray-300">AI is analyzing with enhanced tools...</span>
+              <span className="text-gray-300">AI is working autonomously with enhanced tools...</span>
             </div>
           </div>
         )}
@@ -193,12 +235,13 @@ What would you like to build today?`,
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Ask me anything... I have access to real-time docs, web search, and more!"
+              placeholder="I can now create files, run commands, and work autonomously! What should we build?"
               className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               disabled={isTyping}
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
               <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <Wrench className="w-3 h-3" />
                 <Search className="w-3 h-3" />
                 <Globe className="w-3 h-3" />
                 <FileText className="w-3 h-3" />
@@ -217,12 +260,17 @@ What would you like to build today?`,
           <div className="text-xs text-gray-500 flex items-center space-x-4">
             <span className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>o4-mini</span>
+              <span>o4-mini + o3</span>
             </span>
             <span>•</span>
-            <span>High reasoning</span>
+            <span>Autonomous operations</span>
             <span>•</span>
             <span>MCP enhanced</span>
+            <span>•</span>
+            <span className="flex items-center space-x-1">
+              <Wrench className="w-3 h-3" />
+              <span>File operations enabled</span>
+            </span>
           </div>
         </div>
       </form>

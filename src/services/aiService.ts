@@ -6,7 +6,7 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true, // Note: In production, use a backend proxy
 });
 
-// MCP Server Tools Definition
+// Enhanced MCP Tools with Autonomous File Operations
 const MCP_TOOLS = [
   // Context7 - Get up-to-date documentation
   {
@@ -172,6 +172,157 @@ const MCP_TOOLS = [
         required: ["operation", "context"]
       }
     }
+  },
+
+  // NEW: Autonomous File Operations
+  {
+    type: "function" as const,
+    function: {
+      name: "write_file",
+      description: "Write content to a file. Use for creating new files or completely replacing existing ones. ALWAYS explain what you're doing and why.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "File path relative to project root (e.g., 'src/components/Header.tsx')"
+          },
+          content: {
+            type: "string",
+            description: "Complete file content to write"
+          },
+          reason: {
+            type: "string",
+            description: "Clear explanation of why this file is being created/modified"
+          },
+          impact_level: {
+            type: "string",
+            enum: ["low", "medium", "high"],
+            description: "Impact level: low (new files, minor changes), medium (feature additions), high (major refactoring, deletions)"
+          }
+        },
+        required: ["path", "content", "reason", "impact_level"]
+      }
+    }
+  },
+
+  {
+    type: "function" as const,
+    function: {
+      name: "edit_file",
+      description: "Make targeted edits to an existing file. Use for small modifications without rewriting the entire file. ALWAYS explain the changes.",
+      parameters: {
+        type: "object",
+        properties: {
+          path: {
+            type: "string",
+            description: "File path to edit"
+          },
+          edits: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                start_line: { type: "number" },
+                end_line: { type: "number" },
+                new_content: { type: "string" }
+              }
+            },
+            description: "Array of line-based edits to make"
+          },
+          reason: {
+            type: "string",
+            description: "Clear explanation of what changes are being made and why"
+          },
+          impact_level: {
+            type: "string",
+            enum: ["low", "medium", "high"],
+            description: "Impact level of these changes"
+          }
+        },
+        required: ["path", "edits", "reason", "impact_level"]
+      }
+    }
+  },
+
+  {
+    type: "function" as const,
+    function: {
+      name: "create_project_structure",
+      description: "Create multiple files and folders for a project structure. Use when setting up a new project or major feature.",
+      parameters: {
+        type: "object",
+        properties: {
+          structure: {
+            type: "object",
+            description: "Object representing the folder/file structure to create"
+          },
+          reason: {
+            type: "string",
+            description: "Explanation of why this structure is being created"
+          }
+        },
+        required: ["structure", "reason"]
+      }
+    }
+  },
+
+  {
+    type: "function" as const,
+    function: {
+      name: "run_safe_command",
+      description: "Execute safe terminal commands like npm install, build commands, etc. Will request confirmation for potentially risky commands.",
+      parameters: {
+        type: "object",
+        properties: {
+          command: {
+            type: "string",
+            description: "Command to execute"
+          },
+          working_directory: {
+            type: "string",
+            description: "Directory to run command in (optional)"
+          },
+          reason: {
+            type: "string",
+            description: "Why this command needs to be run"
+          },
+          risk_level: {
+            type: "string",
+            enum: ["safe", "moderate", "risky"],
+            description: "Risk assessment: safe (npm install, build), moderate (git operations), risky (system changes)"
+          }
+        },
+        required: ["command", "reason", "risk_level"]
+      }
+    }
+  },
+
+  {
+    type: "function" as const,
+    function: {
+      name: "request_user_confirmation",
+      description: "Request explicit user confirmation before proceeding with potentially impactful operations.",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            description: "Description of the action that needs confirmation"
+          },
+          impact: {
+            type: "string",
+            description: "Detailed explanation of the potential impact"
+          },
+          alternatives: {
+            type: "array",
+            items: { type: "string" },
+            description: "Alternative approaches if user declines"
+          }
+        },
+        required: ["action", "impact"]
+      }
+    }
   }
 ];
 
@@ -284,20 +435,39 @@ Provide actionable, specific information that enables immediate development star
     }
   }
 
-  // Regular chat and code assistance using o4-mini
+  // Regular chat and code assistance using o4-mini with autonomous capabilities
   async generateCode(prompt: string, context?: string): Promise<AIResponse> {
     try {
-      const systemPrompt = `You are MojoCode AI, an expert software developer and coding assistant specialized in full-stack development.
+      const systemPrompt = `You are MojoCode AI, an expert software developer and coding assistant with autonomous file operation capabilities.
 
-CAPABILITIES:
+CORE CAPABILITIES:
 - Write clean, efficient, production-ready code
 - Provide architectural guidance and best practices
 - Access real-time documentation via Context7
 - Perform web research using Tavily and Firecrawl
 - Help with database design and queries
-- Generate complete applications and components
+- **AUTONOMOUS OPERATIONS**: Create, edit, and manage files with user transparency
 
-TOOLS AVAILABLE:
+AUTONOMOUS TOOLS AVAILABLE:
+- write_file: Create new files or replace existing ones
+- edit_file: Make targeted edits to existing files
+- create_project_structure: Set up project scaffolding
+- run_safe_command: Execute safe terminal commands
+- request_user_confirmation: Ask for approval on risky operations
+
+COMMUNICATION PROTOCOL:
+1. **Always explain what you're doing and why** before taking action
+2. **Assess impact level** for each operation (low/medium/high)
+3. **Request confirmation** for medium/high impact operations
+4. **Provide clear reasoning** for all file operations
+5. **Offer alternatives** when appropriate
+
+IMPACT ASSESSMENT:
+- LOW: Creating new files, adding features, installing safe dependencies
+- MEDIUM: Modifying existing core files, changing project structure
+- HIGH: Deleting files, major refactoring, risky commands
+
+RESEARCH TOOLS:
 - get_library_docs: Get up-to-date documentation for any library/framework
 - firecrawl_scrape/search: Extract content from web pages and search
 - tavily_search/extract: Advanced web research and content analysis  
@@ -305,14 +475,15 @@ TOOLS AVAILABLE:
 
 GUIDELINES:
 - Always use the latest documentation when suggesting code
-- Provide complete, working examples
+- Provide complete, working examples with autonomous implementation
 - Include error handling and best practices
 - Use modern patterns and techniques
-- Explain your code choices and architecture decisions
+- Maintain transparent communication throughout all operations
+- Ask for confirmation on anything that could significantly impact the project
 
 ${context ? `CURRENT CONTEXT: ${context}` : ''}
 
-When you need current documentation or want to research best practices, use the available tools. Always provide practical, implementable solutions.`;
+Remember: You can now directly create and modify files, but always communicate your intentions clearly and get approval for significant changes.`;
 
       const response = await openai.responses.create({
         model: 'o4-mini', // Using o4-mini for code generation and assistance
@@ -343,7 +514,7 @@ When you need current documentation or want to research best practices, use the 
     }
   }
 
-  // App generation using o4-mini for code implementation
+  // App generation using o4-mini for code implementation with autonomous file operations
   async generateApp(prompt: string): Promise<{
     html: string;
     css: string;
@@ -355,6 +526,14 @@ When you need current documentation or want to research best practices, use the 
       const generationPrompt = `Create a complete, functional, and beautiful web application based on this detailed specification:
 
 ${prompt}
+
+AUTONOMOUS DEVELOPMENT APPROACH:
+You have the ability to use autonomous file operations. For this app generation:
+
+1. **EXPLAIN YOUR PLAN**: First, describe what files you'll create and why
+2. **USE AUTONOMOUS TOOLS**: Use write_file to create the HTML, CSS, and JavaScript files
+3. **PROVIDE REASONING**: Explain each file's purpose and key features
+4. **COMMUNICATE PROGRESS**: Keep the user informed of what you're building
 
 DEVELOPMENT REQUIREMENTS:
 - Generate clean, semantic HTML5 with proper structure and accessibility
@@ -385,12 +564,18 @@ DESIGN GUIDELINES:
 - Use modern color palettes and contemporary design trends
 - Ensure excellent contrast ratios and readability
 
+AUTONOMOUS OPERATION INSTRUCTIONS:
+- Use write_file for each of the three main files (HTML, CSS, JavaScript)
+- Set impact_level as "low" since this is new project creation
+- Provide clear reasoning for each file's structure and features
+- Explain the overall architecture and how the files work together
+
 Create a polished, production-worthy application that demonstrates modern web development capabilities and best practices.`;
 
       const response = await openai.responses.create({
         model: 'o4-mini', // Using o4-mini for actual code generation
         input: generationPrompt,
-        instructions: 'You are an expert full-stack developer creating production-ready web applications. Use the latest web standards, research current best practices using available tools, and focus on creating beautiful, functional, and accessible applications.',
+        instructions: 'You are an expert full-stack developer with autonomous file operation capabilities. Use write_file tools to create the project files directly. Research current best practices using available tools. Always explain what you\'re building and why. Focus on creating beautiful, functional, and accessible applications.',
         temperature: 0.3,
         reasoning: {
           effort: 'high'
@@ -829,7 +1014,7 @@ document.addEventListener('keydown', function(e) {
       const response = await openai.responses.create({
         model: 'o4-mini', // Using o4-mini for code explanation
         input: `Please explain this ${language} code in detail:\n\n\`\`\`${language}\n${code}\n\`\`\``,
-        instructions: 'You are a code explanation expert. Explain the given code in simple terms, highlighting key concepts, functionality, and best practices. Use the get_library_docs tool if you need current documentation about any libraries or frameworks used.',
+        instructions: 'You are a code explanation expert with autonomous capabilities. Explain the given code in simple terms, highlighting key concepts, functionality, and best practices. Use get_library_docs if you need current documentation about any libraries or frameworks used. Offer to make improvements if you see opportunities.',
         temperature: 0.3,
         reasoning: {
           effort: 'medium'
@@ -851,7 +1036,7 @@ document.addEventListener('keydown', function(e) {
       const response = await openai.responses.create({
         model: 'o4-mini', // Using o4-mini for research tasks
         input: `Research the following topic and provide comprehensive, up-to-date information: ${topic}`,
-        instructions: 'You are a research assistant. Use tavily_search and get_library_docs to gather current information. Provide well-structured, factual content with sources when possible.',
+        instructions: 'You are a research assistant with autonomous capabilities. Use tavily_search and get_library_docs to gather current information. Provide well-structured, factual content with sources when possible. If you find useful code examples or implementations, offer to create files with them.',
         temperature: 0.3,
         reasoning: {
           effort: 'high'
@@ -872,8 +1057,8 @@ document.addEventListener('keydown', function(e) {
     try {
       const response = await openai.responses.create({
         model: 'o4-mini', // Using o4-mini for analysis tasks
-        input: `Analyze the website at ${url}. Extract key information, technologies used, and provide insights about its structure and content.`,
-        instructions: 'You are a web analysis expert. Use firecrawl_scrape to extract content and analyze the website structure, technologies, and content quality.',
+        input: `Analyze the website at ${url}. Extract key information, technologies used, and provide insights about its structure and content. If you find interesting patterns or implementations, offer to recreate them.`,
+        instructions: 'You are a web analysis expert with autonomous capabilities. Use firecrawl_scrape to extract content and analyze the website structure, technologies, and content quality. If you discover useful code patterns or features, offer to implement similar functionality.',
         temperature: 0.3,
         reasoning: {
           effort: 'medium'

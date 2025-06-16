@@ -28,6 +28,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   project_id?: string;
+  toolCalls?: ToolCall[];
 }
 
 export interface ChatThread {
@@ -52,6 +53,9 @@ export interface ToolCall {
   name: string;
   parameters: Record<string, any>;
   result?: any;
+  status?: 'pending' | 'completed' | 'failed' | 'needs_confirmation';
+  impact_level?: 'low' | 'medium' | 'high';
+  reason?: string;
 }
 
 export type PanelType = 'chat' | 'editor' | 'preview';
@@ -109,4 +113,36 @@ export interface SupabaseRequest {
   operation: 'query_suggestion' | 'schema_design' | 'optimization' | 'migration';
   context: string;
   table_name?: string;
+}
+
+// Autonomous File Operation Types
+export interface FileOperationRequest {
+  path: string;
+  content?: string;
+  edits?: FileEdit[];
+  reason: string;
+  impact_level: 'low' | 'medium' | 'high';
+}
+
+export interface FileEdit {
+  start_line: number;
+  end_line: number;
+  new_content: string;
+}
+
+export interface ProjectStructure {
+  [key: string]: string | ProjectStructure;
+}
+
+export interface SafeCommandRequest {
+  command: string;
+  working_directory?: string;
+  reason: string;
+  risk_level: 'safe' | 'moderate' | 'risky';
+}
+
+export interface ConfirmationRequest {
+  action: string;
+  impact: string;
+  alternatives?: string[];
 }
