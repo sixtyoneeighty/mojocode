@@ -242,44 +242,49 @@ When you need current documentation or want to research best practices, use the 
     description: string;
   }> {
     try {
-      const generationPrompt = `Create a complete, functional, and beautiful web application based on this description: "${prompt}"
+      const generationPrompt = `Create a complete, functional, and beautiful web application based on this detailed description:
+
+${prompt}
 
 REQUIREMENTS:
-- Generate clean, semantic HTML5 with proper structure
-- Create modern, responsive CSS with a beautiful design
-- Include interactive JavaScript functionality
-- Use a cohesive color scheme and typography
-- Follow accessibility standards (ARIA labels, semantic tags)
-- Make it production-ready and polished
-- Use modern CSS features (Grid, Flexbox, custom properties)
-- Ensure mobile-first responsive design
+- Generate clean, semantic HTML5 with proper structure and accessibility
+- Create modern, responsive CSS with beautiful design and animations
+- Include interactive JavaScript functionality with error handling
+- Use a cohesive, professional color scheme and typography
+- Follow accessibility standards (ARIA labels, semantic tags, keyboard navigation)
+- Make it production-ready and polished with attention to detail
+- Use modern CSS features (Grid, Flexbox, custom properties, animations)
+- Ensure mobile-first responsive design with smooth transitions
+- Include proper form validation and user feedback
+- Add loading states and micro-interactions for better UX
 
-STRUCTURE:
-Return the code in clearly marked sections:
-1. HTML - Complete HTML document with proper head and body
-2. CSS - Comprehensive styling with responsive design
-3. JavaScript - Interactive functionality and any needed logic
+STRUCTURE YOUR RESPONSE AS:
+1. HTML - Complete HTML document with proper head, meta tags, and semantic structure
+2. CSS - Comprehensive styling with responsive design, animations, and modern techniques
+3. JavaScript - Interactive functionality with proper event handling and error management
 
 DESIGN GUIDELINES:
-- Use a modern, professional color palette
-- Include hover effects and smooth transitions
-- Add subtle animations for better UX
-- Ensure proper spacing and typography hierarchy
-- Make it visually appealing and user-friendly
+- Use a modern, professional design system approach
+- Include hover effects, focus states, and smooth transitions
+- Add subtle animations for enhanced user experience
+- Ensure proper spacing, typography hierarchy, and visual balance
+- Make it visually impressive and user-friendly
+- Use modern color palettes and design trends
+- Ensure excellent performance and optimization
 
-Create something impressive that would be worthy of production use.`;
+Create something that would be worthy of production use and showcase modern web development capabilities.`;
 
       const response = await openai.responses.create({
         model: 'o4-mini',
         input: generationPrompt,
-        instructions: 'You are an expert full-stack developer creating production-ready web applications. Use the latest web standards and best practices. Research current trends if needed using available tools.',
+        instructions: 'You are an expert full-stack developer creating production-ready web applications. Use the latest web standards, best practices, and research current trends using available tools. Focus on creating beautiful, functional, and accessible applications.',
         temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
         tools: MCP_TOOLS,
         tool_choice: 'auto',
-        max_output_tokens: 6000
+        max_output_tokens: 8000
       });
 
       const content = this.extractContentFromResponse(response);
@@ -287,9 +292,9 @@ Create something impressive that would be worthy of production use.`;
       // Parse the response to extract HTML, CSS, and JavaScript
       const { html, css, javascript } = this.parseGeneratedCode(content);
       
-      // Generate project name and description
-      const projectName = this.generateProjectName(prompt);
-      const description = `AI-generated app: ${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}`;
+      // Generate project name and description from the content
+      const projectName = this.generateProjectName(content, prompt);
+      const description = this.generateProjectDescription(prompt);
 
       return {
         html,
@@ -305,23 +310,69 @@ Create something impressive that would be worthy of production use.`;
   }
 
   private parseGeneratedCode(content: string): { html: string; css: string; javascript: string } {
-    const htmlMatch = content.match(/```(?:html)?\n([\s\S]*?)\n```/i);
-    const cssMatch = content.match(/```(?:css)?\n([\s\S]*?)\n```/i);
-    const jsMatch = content.match(/```(?:javascript|js)?\n([\s\S]*?)\n```/i);
+    // Try to extract code blocks with language identifiers
+    const htmlMatch = content.match(/```(?:html|HTML)\s*\n([\s\S]*?)\n```/i);
+    const cssMatch = content.match(/```(?:css|CSS)\s*\n([\s\S]*?)\n```/i);
+    const jsMatch = content.match(/```(?:javascript|js|JavaScript|JS)\s*\n([\s\S]*?)\n```/i);
 
-    const html = htmlMatch?.[1] || this.generateDefaultHTML();
-    const css = cssMatch?.[1] || this.generateDefaultCSS();
-    const javascript = jsMatch?.[1] || this.generateDefaultJS();
+    let html = htmlMatch?.[1]?.trim() || '';
+    let css = cssMatch?.[1]?.trim() || '';
+    let javascript = jsMatch?.[1]?.trim() || '';
+
+    // If no labeled code blocks found, try to extract any code blocks
+    if (!html && !css && !javascript) {
+      const allCodeBlocks = Array.from(content.matchAll(/```[a-zA-Z]*\s*\n([\s\S]*?)\n```/g));
+      
+      // Try to identify code by content patterns
+      for (const [, block] of allCodeBlocks) {
+        const trimmedBlock = block.trim();
+        
+        if (trimmedBlock.includes('<!DOCTYPE html') || trimmedBlock.includes('<html')) {
+          html = trimmedBlock;
+        } else if (trimmedBlock.includes('body {') || trimmedBlock.includes('.container') || trimmedBlock.includes('@media')) {
+          css = trimmedBlock;
+        } else if (trimmedBlock.includes('function') || trimmedBlock.includes('document.') || trimmedBlock.includes('addEventListener')) {
+          javascript = trimmedBlock;
+        }
+      }
+    }
+
+    // Fallback to defaults if still empty
+    if (!html) html = this.generateDefaultHTML();
+    if (!css) css = this.generateDefaultCSS();
+    if (!javascript) javascript = this.generateDefaultJS();
 
     return { html, css, javascript };
   }
 
-  private generateProjectName(prompt: string): string {
+  private generateProjectName(content: string, prompt: string): string {
+    // Try to extract title from HTML content
+    const titleMatch = content.match(/<title>(.*?)<\/title>/i);
+    if (titleMatch && titleMatch[1] && !titleMatch[1].includes('My App')) {
+      return titleMatch[1].trim();
+    }
+
+    // Try to extract h1 content
+    const h1Match = content.match(/<h1[^>]*>(.*?)<\/h1>/i);
+    if (h1Match && h1Match[1]) {
+      const h1Text = h1Match[1].replace(/<[^>]*>/g, '').trim();
+      if (h1Text && !h1Text.toLowerCase().includes('welcome')) {
+        return h1Text;
+      }
+    }
+
+    // Fall back to generating from prompt
     const words = prompt.split(' ').filter(word => word.length > 2);
     const significantWords = words.slice(0, 3);
     return significantWords.map(word => 
       word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     ).join(' ') + ' App';
+  }
+
+  private generateProjectDescription(prompt: string): string {
+    return prompt.length > 150 
+      ? prompt.substring(0, 147) + '...'
+      : prompt;
   }
 
   private generateDefaultHTML(): string {
@@ -335,12 +386,20 @@ Create something impressive that would be worthy of production use.`;
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="header">
             <h1>Welcome to My App</h1>
+            <p>Your application is ready to be customized</p>
         </header>
-        <main>
-            <p>Your app content goes here.</p>
+        <main class="main">
+            <section class="hero">
+                <h2>Get Started</h2>
+                <p>This is a template app generated by MojoCode AI. Customize it to match your vision!</p>
+                <button class="cta-button" onclick="handleCTAClick()">Get Started</button>
+            </section>
         </main>
+        <footer class="footer">
+            <p>&copy; 2024 My App. Built with MojoCode.</p>
+        </footer>
     </div>
     <script src="script.js"></script>
 </body>
@@ -354,10 +413,21 @@ Create something impressive that would be worthy of production use.`;
     box-sizing: border-box;
 }
 
+:root {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --secondary-color: #f8fafc;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
-    color: #333;
+    color: var(--text-primary);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
 }
@@ -365,27 +435,244 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 2rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-header {
+.header {
     text-align: center;
+    margin-bottom: 3rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+}
+
+.header p {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    max-width: 600px;
+    transform: translateY(0);
+    transition: var(--transition);
+}
+
+.hero:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
     margin-bottom: 2rem;
 }
 
-h1 {
-    font-size: 2.5rem;
+.cta-button {
+    background: var(--primary-color);
     color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+}
+
+.cta-button:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.cta-button:active {
+    transform: translateY(0);
+}
+
+.footer {
+    text-align: center;
+    margin-top: 3rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .hero {
+        padding: 2rem;
+    }
+    
+    .hero h2 {
+        font-size: 2rem;
+    }
+}
+
+/* Loading animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero {
+    animation: fadeInUp 0.8s ease-out;
 }`;
   }
 
   private generateDefaultJS(): string {
-    return `console.log('App loaded successfully!');
+    return `console.log('MojoCode App loaded successfully!');
 
+// Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Add your JavaScript functionality here
     console.log('DOM content loaded');
+    initializeApp();
+});
+
+// App initialization
+function initializeApp() {
+    // Add smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Add loading animation
+    const hero = document.querySelector('.hero');
+    if (hero) {
+        hero.style.opacity = '0';
+        hero.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            hero.style.transition = 'all 0.8s ease-out';
+            hero.style.opacity = '1';
+            hero.style.transform = 'translateY(0)';
+        }, 100);
+    }
+    
+    // Initialize interactive elements
+    initializeInteractiveElements();
+}
+
+// Handle CTA button click
+function handleCTAClick() {
+    console.log('CTA button clicked!');
+    
+    // Add visual feedback
+    const button = event.target;
+    button.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+        button.style.transform = '';
+    }, 150);
+    
+    // Show success message
+    showNotification('Welcome to your new app!', 'success');
+}
+
+// Initialize interactive elements
+function initializeInteractiveElements() {
+    // Add hover effects for interactive elements
+    const interactiveElements = document.querySelectorAll('button, [onclick]');
+    
+    interactiveElements.forEach(element => {
+        element.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        element.addEventListener('mouseleave', function() {
+            this.style.transform = '';
+        });
+    });
+}
+
+// Utility function to show notifications
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = \`
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 2rem;
+        background: \${type === 'success' ? '#10b981' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease-out;
+    \`;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Add keyboard accessibility
+document.addEventListener('keydown', function(e) {
+    // Handle Enter key on focusable elements
+    if (e.key === 'Enter' && e.target.hasAttribute('onclick')) {
+        e.target.click();
+    }
 });`;
   }
 
