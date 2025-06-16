@@ -10,318 +10,296 @@ const openai = new OpenAI({
 const MCP_TOOLS = [
   // Context7 - Get up-to-date documentation
   {
+    name: "get_library_docs",
     type: "function" as const,
-    function: {
-      name: "get_library_docs",
-      description: "Fetch up-to-date documentation for a library using Context7. Use this when you need current documentation for frameworks, libraries, or APIs.",
-      parameters: {
-        type: "object",
-        properties: {
-          libraryName: {
-            type: "string",
-            description: "The name of the library to search for (e.g., 'React', 'Next.js', 'MongoDB')"
-          },
-          topic: {
-            type: "string", 
-            description: "Focus the docs on a specific topic (e.g., 'routing', 'hooks', 'authentication')"
-          },
-          tokens: {
-            type: "number",
-            description: "Maximum number of tokens to return (default: 10000)"
-          }
+    description: "Fetch up-to-date documentation for a library using Context7. Use this when you need current documentation for frameworks, libraries, or APIs.",
+    parameters: {
+      type: "object",
+      properties: {
+        libraryName: {
+          type: "string",
+          description: "The name of the library to search for (e.g., 'React', 'Next.js', 'MongoDB')"
         },
-        required: ["libraryName"]
-      }
+        topic: {
+          type: "string",
+          description: "Focus the docs on a specific topic (e.g., 'routing', 'hooks', 'authentication')"
+        },
+        tokens: {
+          type: "number",
+          description: "Maximum number of tokens to return (default: 10000)"
+        }
+      },
+      required: ["libraryName"]
     }
   },
   
   // Firecrawl - Web scraping and crawling
   {
+    name: "firecrawl_scrape",
     type: "function" as const,
-    function: {
-      name: "firecrawl_scrape",
-      description: "Scrape content from a single URL. Use this to extract content from web pages for analysis or integration.",
-      parameters: {
-        type: "object",
-        properties: {
-          url: {
-            type: "string",
-            description: "The URL to scrape"
-          },
-          formats: {
-            type: "array",
-            items: { type: "string" },
-            description: "Output formats (e.g., ['markdown', 'html'])"
-          },
-          onlyMainContent: {
-            type: "boolean",
-            description: "Extract only main content, excluding navigation and ads"
-          }
+    description: "Scrape content from a single URL. Use this to extract content from web pages for analysis or integration.",
+    parameters: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          description: "The URL to scrape"
         },
-        required: ["url"]
-      }
+        formats: {
+          type: "array",
+          items: { type: "string" },
+          description: "Output formats (e.g., ['markdown', 'html'])"
+        },
+        onlyMainContent: {
+          type: "boolean",
+          description: "Extract only main content, excluding navigation and ads"
+        }
+      },
+      required: ["url"]
     }
   },
   
   {
+    name: "firecrawl_search",
     type: "function" as const,
-    function: {
-      name: "firecrawl_search",
-      description: "Search the web and optionally extract content from results. Use this to find information across multiple websites.",
-      parameters: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description: "Search query"
-          },
-          limit: {
-            type: "number", 
-            description: "Number of results to return (default: 5)"
-          },
-          lang: {
-            type: "string",
-            description: "Language for search results (default: 'en')"
-          }
+    description: "Search the web and optionally extract content from results. Use this to find information across multiple websites.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Search query"
         },
-        required: ["query"]
-      }
+        limit: {
+          type: "number",
+          description: "Number of results to return (default: 5)"
+        },
+        lang: {
+          type: "string",
+          description: "Language for search results (default: 'en')"
+        }
+      },
+      required: ["query"]
     }
   },
 
   // Tavily - Advanced web research
   {
+    name: "tavily_search",
     type: "function" as const,
-    function: {
-      name: "tavily_search",
-      description: "Perform advanced web search with AI-powered analysis. Use for research, finding recent information, or gathering comprehensive data on topics.",
-      parameters: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description: "Research query or topic"
-          },
-          search_depth: {
-            type: "string",
-            enum: ["basic", "advanced"],
-            description: "Depth of search analysis"
-          },
-          include_domains: {
-            type: "array",
-            items: { type: "string" },
-            description: "Specific domains to focus on"
-          },
-          max_results: {
-            type: "number",
-            description: "Maximum number of results (default: 10)"
-          }
+    description: "Perform advanced web search with AI-powered analysis. Use for research, finding recent information, or gathering comprehensive data on topics.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Research query or topic"
         },
-        required: ["query"]
-      }
+        search_depth: {
+          type: "string",
+          enum: ["basic", "advanced"],
+          description: "Depth of search analysis"
+        },
+        include_domains: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific domains to focus on"
+        },
+        max_results: {
+          type: "number",
+          description: "Maximum number of results (default: 10)"
+        }
+      },
+      required: ["query"]
     }
   },
 
   {
+    name: "tavily_extract",
     type: "function" as const,
-    function: {
-      name: "tavily_extract",
-      description: "Extract and analyze content from specific URLs with AI processing. Use for detailed content analysis.",
-      parameters: {
-        type: "object",
-        properties: {
-          urls: {
-            type: "array",
-            items: { type: "string" },
-            description: "URLs to extract content from"
-          },
-          extract_type: {
-            type: "string",
-            enum: ["content", "summary", "key_points"],
-            description: "Type of extraction to perform"
-          }
+    description: "Extract and analyze content from specific URLs with AI processing. Use for detailed content analysis.",
+    parameters: {
+      type: "object",
+      properties: {
+        urls: {
+          type: "array",
+          items: { type: "string" },
+          description: "URLs to extract content from"
         },
-        required: ["urls"]
-      }
+        extract_type: {
+          type: "string",
+          enum: ["content", "summary", "key_points"],
+          description: "Type of extraction to perform"
+        }
+      },
+      required: ["urls"]
     }
   },
 
   // Supabase - Database operations
   {
+    name: "supabase_query",
     type: "function" as const,
-    function: {
-      name: "supabase_query",
-      description: "Execute database queries or operations. Use this to help users with database design, queries, or data management.",
-      parameters: {
-        type: "object",
-        properties: {
-          operation: {
-            type: "string",
-            enum: ["query_suggestion", "schema_design", "optimization", "migration"],
-            description: "Type of database operation"
-          },
-          context: {
-            type: "string",
-            description: "Context about the database need or current schema"
-          },
-          table_name: {
-            type: "string",
-            description: "Specific table name if relevant"
-          }
+    description: "Execute database queries or operations. Use this to help users with database design, queries, or data management.",
+    parameters: {
+      type: "object",
+      properties: {
+        operation: {
+          type: "string",
+          enum: ["query_suggestion", "schema_design", "optimization", "migration"],
+          description: "Type of database operation"
         },
-        required: ["operation", "context"]
-      }
+        context: {
+          type: "string",
+          description: "Context about the database need or current schema"
+        },
+        table_name: {
+          type: "string",
+          description: "Specific table name if relevant"
+        }
+      },
+      required: ["operation", "context"]
     }
   },
 
   // NEW: Autonomous File Operations
   {
+    name: "write_file",
     type: "function" as const,
-    function: {
-      name: "write_file",
-      description: "Write content to a file. Use for creating new files or completely replacing existing ones. ALWAYS explain what you're doing and why.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: {
-            type: "string",
-            description: "File path relative to project root (e.g., 'src/components/Header.tsx')"
-          },
-          content: {
-            type: "string",
-            description: "Complete file content to write"
-          },
-          reason: {
-            type: "string",
-            description: "Clear explanation of why this file is being created/modified"
-          },
-          impact_level: {
-            type: "string",
-            enum: ["low", "medium", "high"],
-            description: "Impact level: low (new files, minor changes), medium (feature additions), high (major refactoring, deletions)"
-          }
+    description: "Write content to a file. Use for creating new files or completely replacing existing ones. ALWAYS explain what you're doing and why.",
+    parameters: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "File path relative to project root (e.g., 'src/components/Header.tsx')"
         },
-        required: ["path", "content", "reason", "impact_level"]
-      }
+        content: {
+          type: "string",
+          description: "Complete file content to write"
+        },
+        reason: {
+          type: "string",
+          description: "Clear explanation of why this file is being created/modified"
+        },
+        impact_level: {
+          type: "string",
+          enum: ["low", "medium", "high"],
+          description: "Impact level: low (new files, minor changes), medium (feature additions), high (major refactoring, deletions)"
+        }
+      },
+      required: ["path", "content", "reason", "impact_level"]
     }
   },
 
   {
+    name: "edit_file",
     type: "function" as const,
-    function: {
-      name: "edit_file",
-      description: "Make targeted edits to an existing file. Use for small modifications without rewriting the entire file. ALWAYS explain the changes.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: {
-            type: "string",
-            description: "File path to edit"
-          },
-          edits: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                start_line: { type: "number" },
-                end_line: { type: "number" },
-                new_content: { type: "string" }
-              }
-            },
-            description: "Array of line-based edits to make"
-          },
-          reason: {
-            type: "string",
-            description: "Clear explanation of what changes are being made and why"
-          },
-          impact_level: {
-            type: "string",
-            enum: ["low", "medium", "high"],
-            description: "Impact level of these changes"
-          }
+    description: "Make targeted edits to an existing file. Use for small modifications without rewriting the entire file. ALWAYS explain the changes.",
+    parameters: {
+      type: "object",
+      properties: {
+        path: {
+          type: "string",
+          description: "File path to edit"
         },
-        required: ["path", "edits", "reason", "impact_level"]
-      }
-    }
-  },
-
-  {
-    type: "function" as const,
-    function: {
-      name: "create_project_structure",
-      description: "Create multiple files and folders for a project structure. Use when setting up a new project or major feature.",
-      parameters: {
-        type: "object",
-        properties: {
-          structure: {
+        edits: {
+          type: "array",
+          items: {
             type: "object",
-            description: "Object representing the folder/file structure to create"
+            properties: {
+              start_line: { type: "number" },
+              end_line: { type: "number" },
+              new_content: { type: "string" }
+            }
           },
-          reason: {
-            type: "string",
-            description: "Explanation of why this structure is being created"
-          }
+          description: "Array of line-based edits to make"
         },
-        required: ["structure", "reason"]
-      }
+        reason: {
+          type: "string",
+          description: "Clear explanation of what changes are being made and why"
+        },
+        impact_level: {
+          type: "string",
+          enum: ["low", "medium", "high"],
+          description: "Impact level of these changes"
+        }
+      },
+      required: ["path", "edits", "reason", "impact_level"]
     }
   },
 
   {
+    name: "create_project_structure",
     type: "function" as const,
-    function: {
-      name: "run_safe_command",
-      description: "Execute safe terminal commands like npm install, build commands, etc. Will request confirmation for potentially risky commands.",
-      parameters: {
-        type: "object",
-        properties: {
-          command: {
-            type: "string",
-            description: "Command to execute"
-          },
-          working_directory: {
-            type: "string",
-            description: "Directory to run command in (optional)"
-          },
-          reason: {
-            type: "string",
-            description: "Why this command needs to be run"
-          },
-          risk_level: {
-            type: "string",
-            enum: ["safe", "moderate", "risky"],
-            description: "Risk assessment: safe (npm install, build), moderate (git operations), risky (system changes)"
-          }
+    description: "Create multiple files and folders for a project structure. Use when setting up a new project or major feature.",
+    parameters: {
+      type: "object",
+      properties: {
+        structure: {
+          type: "object",
+          description: "Object representing the folder/file structure to create"
         },
-        required: ["command", "reason", "risk_level"]
-      }
+        reason: {
+          type: "string",
+          description: "Explanation of why this structure is being created"
+        }
+      },
+      required: ["structure", "reason"]
     }
   },
 
   {
+    name: "run_safe_command",
     type: "function" as const,
-    function: {
-      name: "request_user_confirmation",
-      description: "Request explicit user confirmation before proceeding with potentially impactful operations.",
-      parameters: {
-        type: "object",
-        properties: {
-          action: {
-            type: "string",
-            description: "Description of the action that needs confirmation"
-          },
-          impact: {
-            type: "string",
-            description: "Detailed explanation of the potential impact"
-          },
-          alternatives: {
-            type: "array",
-            items: { type: "string" },
-            description: "Alternative approaches if user declines"
-          }
+    description: "Execute safe terminal commands like npm install, build commands, etc. Will request confirmation for potentially risky commands.",
+    parameters: {
+      type: "object",
+      properties: {
+        command: {
+          type: "string",
+          description: "Command to execute"
         },
-        required: ["action", "impact"]
-      }
+        working_directory: {
+          type: "string",
+          description: "Directory to run command in (optional)"
+        },
+        reason: {
+          type: "string",
+          description: "Why this command needs to be run"
+        },
+        risk_level: {
+          type: "string",
+          enum: ["safe", "moderate", "risky"],
+          description: "Risk assessment: safe (npm install, build), moderate (git operations), risky (system changes)"
+        }
+      },
+      required: ["command", "reason", "risk_level"]
+    }
+  },
+
+  {
+    name: "request_user_confirmation",
+    type: "function" as const,
+    description: "Request explicit user confirmation before proceeding with potentially impactful operations.",
+    parameters: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          description: "Description of the action that needs confirmation"
+        },
+        impact: {
+          type: "string",
+          description: "Detailed explanation of the potential impact"
+        },
+        alternatives: {
+          type: "array",
+          items: { type: "string" },
+          description: "Alternative approaches if user declines"
+        }
+      },
+      required: ["action", "impact"]
     }
   }
 ];
@@ -359,7 +337,6 @@ Return ONLY the enhanced prompt as a complete, detailed description - no additio
         model: 'o3', // Using o3 for strategic planning and enhancement
         input: enhancementPrompt,
         instructions: 'You are a senior product strategist with expertise in app development, UX design, and technical architecture. Provide comprehensive, actionable enhancements that bridge business requirements with technical implementation.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -424,7 +401,6 @@ Provide actionable, specific information that enables immediate development star
         model: 'o3', // Using o3 for strategic planning and analysis
         input: planningPrompt,
         instructions: 'You are a senior software architect and project lead. Use advanced reasoning to create comprehensive, actionable project plans. Research current best practices and technologies using available tools when needed.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -494,7 +470,6 @@ Remember: You can now directly create and modify files, but always communicate y
         model: 'o4-mini', // Using o4-mini for code generation and assistance
         input: prompt,
         instructions: systemPrompt,
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -581,7 +556,6 @@ Create a polished, production-worthy application that demonstrates modern web de
         model: 'o4-mini', // Using o4-mini for actual code generation
         input: generationPrompt,
         instructions: 'You are an expert full-stack developer with autonomous file operation capabilities. Use write_file tools to create the project files directly. Research current best practices using available tools. Always explain what you\'re building and why. Focus on creating beautiful, functional, and accessible applications.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -1020,7 +994,6 @@ document.addEventListener('keydown', function(e) {
         model: 'o4-mini', // Using o4-mini for code explanation
         input: `Please explain this ${language} code in detail:\n\n\`\`\`${language}\n${code}\n\`\`\``,
         instructions: 'You are a code explanation expert with autonomous capabilities. Explain the given code in simple terms, highlighting key concepts, functionality, and best practices. Use get_library_docs if you need current documentation about any libraries or frameworks used. Offer to make improvements if you see opportunities.',
-        temperature: 0.3,
         reasoning: {
           effort: 'medium'
         },
@@ -1042,7 +1015,6 @@ document.addEventListener('keydown', function(e) {
         model: 'o4-mini', // Using o4-mini for research tasks
         input: `Research the following topic and provide comprehensive, up-to-date information: ${topic}`,
         instructions: 'You are a research assistant with autonomous capabilities. Use tavily_search and get_library_docs to gather current information. Provide well-structured, factual content with sources when possible. If you find useful code examples or implementations, offer to create files with them.',
-        temperature: 0.3,
         reasoning: {
           effort: 'high'
         },
@@ -1064,7 +1036,6 @@ document.addEventListener('keydown', function(e) {
         model: 'o4-mini', // Using o4-mini for analysis tasks
         input: `Analyze the website at ${url}. Extract key information, technologies used, and provide insights about its structure and content. If you find interesting patterns or implementations, offer to recreate them.`,
         instructions: 'You are a web analysis expert with autonomous capabilities. Use firecrawl_scrape to extract content and analyze the website structure, technologies, and content quality. If you discover useful code patterns or features, offer to implement similar functionality.',
-        temperature: 0.3,
         reasoning: {
           effort: 'medium'
         },
