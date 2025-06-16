@@ -363,44 +363,44 @@ REQUIREMENTS:
 - Authentication: ${authNeeds}
 - Database: ${databaseNeeds}
 
-Create a detailed project analysis with the following structure:
+Create a detailed project analysis with the following EXACT structure:
 
-PROJECT NAME: [Suggest a memorable, brandable name that reflects the app's purpose]
+**PROJECT NAME:** [Suggest a memorable, brandable name that reflects the app's purpose]
 
-DESCRIPTION: [Write a compelling 2-3 sentence summary that captures the app's value proposition and target audience]
+**DESCRIPTION:** [Write a compelling 2-3 sentence summary that captures the app's value proposition and target audience]
 
-CORE FEATURES:
-- [List 5-7 essential features that deliver the primary user value]
-- [Include user authentication and data management features if needed]
-- [Focus on MVP features that can be implemented in the initial version]
+**CORE FEATURES:**
+• [List 5-7 essential features that deliver the primary user value]
+• [Include user authentication and data management features if needed]
+• [Focus on MVP features that can be implemented in the initial version]
 
-TECH STACK:
-- [Specify frontend technologies (HTML5, CSS3, JavaScript, frameworks)]
-- [Include any necessary APIs, libraries, or third-party integrations]
-- [Consider authentication and database technologies if required]
-- [Mention responsive design and accessibility tools]
+**TECH STACK:**
+• [Specify frontend technologies (HTML5, CSS3, JavaScript, frameworks)]
+• [Include any necessary APIs, libraries, or third-party integrations]
+• [Consider authentication and database technologies if required]
+• [Mention responsive design and accessibility tools]
 
-FILE STRUCTURE:
-- [List main files that will be created (HTML, CSS, JS)]
-- [Include any configuration files or additional assets needed]
-- [Consider modular organization for maintainability]
+**FILE STRUCTURE:**
+• [List main files that will be created (HTML, CSS, JS)]
+• [Include any configuration files or additional assets needed]
+• [Consider modular organization for maintainability]
 
-CLARIFICATIONS NEEDED:
-- [Identify any ambiguous requirements that need user input]
-- [List assumptions that should be validated]
-- [Highlight any complex features that might need simplification]
+**CLARIFICATIONS NEEDED:**
+• [Identify any ambiguous requirements that need user input]
+• [List assumptions that should be validated]
+• [Highlight any complex features that might need simplification]
 
-COMPLEXITY: [Rate as Simple/Medium/Complex based on:]
+**COMPLEXITY:** [Rate as Simple/Medium/Complex based on:]
 - Simple: Basic UI, minimal interactivity, no external APIs
 - Medium: Multiple features, some state management, possible API integration
 - Complex: Advanced functionality, real-time features, complex data relationships
 
-Provide actionable, specific information that enables immediate development start.`;
+IMPORTANT: Use bullet points (•) for all lists and follow the exact formatting above.`;
 
       const response = await openai.responses.create({
         model: 'o3', // Using o3 for strategic planning and analysis
         input: planningPrompt,
-        instructions: 'You are a senior software architect and project lead. Use advanced reasoning to create comprehensive, actionable project plans. Research current best practices and technologies using available tools when needed.',
+        instructions: 'You are a senior software architect and project lead. Use advanced reasoning to create comprehensive, actionable project plans. Follow the EXACT format specified with bullet points (•) for all lists. Research current best practices and technologies using available tools when needed.',
         reasoning: {
           effort: 'high'
         },
@@ -409,7 +409,9 @@ Provide actionable, specific information that enables immediate development star
         max_output_tokens: 4000
       });
 
-      return this.extractContentFromResponse(response);
+      const content = this.extractContentFromResponse(response);
+      console.log('Raw AI Response:', content); // Debug logging
+      return content;
     } catch (error) {
       console.error('Project Planning Error:', error);
       throw new Error('Failed to create project plan');
@@ -584,6 +586,147 @@ Create a polished, production-worthy application that demonstrates modern web de
       console.error('App Generation Error:', error);
       throw new Error('Failed to generate app');
     }
+  }
+
+  private parseProjectPlan(content: string): {
+    projectName: string;
+    description: string;
+    features: string[];
+    techStack: string[];
+    fileStructure: string[];
+    clarifications: string[];
+    estimatedComplexity: 'Simple' | 'Medium' | 'Complex';
+  } {
+    console.log('Parsing project plan content:', content); // Debug logging
+    
+    let projectName = 'My App';
+    let description = 'Generated application';
+    let features: string[] = [];
+    let techStack: string[] = [];
+    let fileStructure: string[] = [];
+    let clarifications: string[] = [];
+    let complexity: 'Simple' | 'Medium' | 'Complex' = 'Medium';
+    
+    // Split content into lines and clean them
+    const lines = content.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    console.log('Cleaned lines:', lines); // Debug logging
+    
+    let currentSection = '';
+    
+    for (const line of lines) {
+      // Check for section headers (more flexible matching)
+      if (line.toLowerCase().includes('project name') && line.includes(':')) {
+        projectName = line.split(':')[1]?.trim() || projectName;
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('description') && line.includes(':')) {
+        description = line.split(':')[1]?.trim() || description;
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('core features') || line.toLowerCase().includes('features:')) {
+        currentSection = 'features';
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('tech stack') || line.toLowerCase().includes('technology stack')) {
+        currentSection = 'tech';
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('file structure') || line.toLowerCase().includes('files:')) {
+        currentSection = 'files';
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('clarifications') || line.toLowerCase().includes('questions')) {
+        currentSection = 'clarifications';
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('complexity') && line.includes(':')) {
+        const comp = line.split(':')[1]?.trim().toLowerCase() || '';
+        if (comp.includes('simple')) complexity = 'Simple';
+        else if (comp.includes('complex')) complexity = 'Complex';
+        else complexity = 'Medium';
+        continue;
+      }
+      
+      // Parse list items (multiple bullet point types)
+      if (line.match(/^[-•*+]\s+/) || line.match(/^\d+\.\s+/)) {
+        const item = line.replace(/^[-•*+]\s+/, '').replace(/^\d+\.\s+/, '').trim();
+        
+        if (item && currentSection) {
+          switch (currentSection) {
+            case 'features':
+              features.push(item);
+              break;
+            case 'tech':
+              techStack.push(item);
+              break;
+            case 'files':
+              fileStructure.push(item);
+              break;
+            case 'clarifications':
+              clarifications.push(item);
+              break;
+          }
+        }
+      }
+    }
+    
+    // Fallback to default content if nothing was parsed
+    if (features.length === 0) {
+      features = [
+        'Modern responsive design',
+        'User-friendly interface',
+        'Interactive functionality',
+        'Cross-browser compatibility',
+        'Accessibility features'
+      ];
+    }
+    
+    if (techStack.length === 0) {
+      techStack = [
+        'HTML5',
+        'CSS3 with modern features',
+        'Vanilla JavaScript (ES6+)',
+        'Responsive Grid & Flexbox',
+        'CSS Custom Properties'
+      ];
+    }
+    
+    if (fileStructure.length === 0) {
+      fileStructure = [
+        'index.html - Main page structure',
+        'style.css - Styling and layout',
+        'script.js - Interactive functionality'
+      ];
+    }
+    
+    console.log('Parsed project plan:', {
+      projectName,
+      description,
+      features,
+      techStack,
+      fileStructure,
+      clarifications,
+      complexity
+    }); // Debug logging
+    
+    return {
+      projectName,
+      description,
+      features,
+      techStack,
+      fileStructure,
+      clarifications,
+      estimatedComplexity: complexity
+    };
   }
 
   private parseGeneratedCode(content: string): { html: string; css: string; javascript: string } {
@@ -957,12 +1100,21 @@ document.addEventListener('keydown', function(e) {
     // Handle the response format from OpenAI Responses API
     if (response.output && Array.isArray(response.output)) {
       return response.output
-        .map((item: any) => item.content || item.text || '')
+        .map((item: any) => {
+          if (item.type === 'text') {
+            return item.text || '';
+          }
+          return item.content || item.text || '';
+        })
         .join('\n');
     }
     
     if (response.content) {
       return response.content;
+    }
+    
+    if (response.choices && response.choices[0] && response.choices[0].message) {
+      return response.choices[0].message.content || '';
     }
     
     return 'No content received from AI';

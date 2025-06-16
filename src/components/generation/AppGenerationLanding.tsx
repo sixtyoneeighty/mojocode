@@ -140,6 +140,7 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
       setProjectPlan(plan);
       
     } catch (error) {
+      console.error('Planning error:', error);
       toast.error('Failed to create project plan');
       setShowReview(false);
     } finally {
@@ -148,7 +149,7 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
   };
 
   const parseProjectPlan = (content: string): ProjectPlan => {
-    const lines = content.split('\n').filter(line => line.trim());
+    console.log('Parsing project plan content:', content); // Debug logging
     
     let projectName = 'My App';
     let description = 'Generated application';
@@ -158,46 +159,116 @@ export const AppGenerationLanding: React.FC<AppGenerationLandingProps> = ({ onPr
     let clarifications: string[] = [];
     let complexity: 'Simple' | 'Medium' | 'Complex' = 'Medium';
     
+    // Split content into lines and clean them
+    const lines = content.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    console.log('Cleaned lines:', lines); // Debug logging
+    
     let currentSection = '';
     
     for (const line of lines) {
-      const trimmed = line.trim();
+      // Check for section headers (more flexible matching)
+      if (line.toLowerCase().includes('project name') && line.includes(':')) {
+        projectName = line.split(':')[1]?.trim() || projectName;
+        continue;
+      }
       
-      if (trimmed.startsWith('PROJECT NAME:')) {
-        projectName = trimmed.replace('PROJECT NAME:', '').trim();
-      } else if (trimmed.startsWith('DESCRIPTION:')) {
-        description = trimmed.replace('DESCRIPTION:', '').trim();
-      } else if (trimmed.startsWith('CORE FEATURES:')) {
+      if (line.toLowerCase().includes('description') && line.includes(':')) {
+        description = line.split(':')[1]?.trim() || description;
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('core features') || line.toLowerCase().includes('features:')) {
         currentSection = 'features';
-      } else if (trimmed.startsWith('TECH STACK:')) {
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('tech stack') || line.toLowerCase().includes('technology stack')) {
         currentSection = 'tech';
-      } else if (trimmed.startsWith('FILE STRUCTURE:')) {
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('file structure') || line.toLowerCase().includes('files:')) {
         currentSection = 'files';
-      } else if (trimmed.startsWith('CLARIFICATIONS NEEDED:')) {
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('clarifications') || line.toLowerCase().includes('questions')) {
         currentSection = 'clarifications';
-      } else if (trimmed.startsWith('COMPLEXITY:')) {
-        const comp = trimmed.replace('COMPLEXITY:', '').trim();
-        if (comp.includes('Simple')) complexity = 'Simple';
-        else if (comp.includes('Complex')) complexity = 'Complex';
+        continue;
+      }
+      
+      if (line.toLowerCase().includes('complexity') && line.includes(':')) {
+        const comp = line.split(':')[1]?.trim().toLowerCase() || '';
+        if (comp.includes('simple')) complexity = 'Simple';
+        else if (comp.includes('complex')) complexity = 'Complex';
         else complexity = 'Medium';
-      } else if (trimmed.startsWith('-') || trimmed.startsWith('•')) {
-        const item = trimmed.replace(/^[-•]\s*/, '');
-        switch (currentSection) {
-          case 'features':
-            features.push(item);
-            break;
-          case 'tech':
-            techStack.push(item);
-            break;
-          case 'files':
-            fileStructure.push(item);
-            break;
-          case 'clarifications':
-            clarifications.push(item);
-            break;
+        continue;
+      }
+      
+      // Parse list items (multiple bullet point types)
+      if (line.match(/^[-•*+]\s+/) || line.match(/^\d+\.\s+/)) {
+        const item = line.replace(/^[-•*+]\s+/, '').replace(/^\d+\.\s+/, '').trim();
+        
+        if (item && currentSection) {
+          switch (currentSection) {
+            case 'features':
+              features.push(item);
+              break;
+            case 'tech':
+              techStack.push(item);
+              break;
+            case 'files':
+              fileStructure.push(item);
+              break;
+            case 'clarifications':
+              clarifications.push(item);
+              break;
+          }
         }
       }
     }
+    
+    // Fallback to default content if nothing was parsed
+    if (features.length === 0) {
+      features = [
+        'Modern responsive design',
+        'User-friendly interface',
+        'Interactive functionality',
+        'Cross-browser compatibility',
+        'Accessibility features'
+      ];
+    }
+    
+    if (techStack.length === 0) {
+      techStack = [
+        'HTML5',
+        'CSS3 with modern features',
+        'Vanilla JavaScript (ES6+)',
+        'Responsive Grid & Flexbox',
+        'CSS Custom Properties'
+      ];
+    }
+    
+    if (fileStructure.length === 0) {
+      fileStructure = [
+        'index.html - Main page structure',
+        'style.css - Styling and layout',
+        'script.js - Interactive functionality'
+      ];
+    }
+    
+    console.log('Parsed project plan:', {
+      projectName,
+      description,
+      features,
+      techStack,
+      fileStructure,
+      clarifications,
+      complexity
+    }); // Debug logging
     
     return {
       projectName,
