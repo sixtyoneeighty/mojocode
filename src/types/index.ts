@@ -44,6 +44,14 @@ export interface AIResponse {
   code?: string;
   language?: string;
   suggestions?: string[];
+  toolCalls?: ToolCall[];
+}
+
+export interface ToolCall {
+  id: string;
+  name: string;
+  parameters: Record<string, any>;
+  result?: any;
 }
 
 export type PanelType = 'chat' | 'editor' | 'preview';
@@ -57,4 +65,48 @@ export interface AppState {
   error: string | null;
   activePanel: PanelType;
   isMobile: boolean;
+}
+
+// MCP Tool Types
+export interface MCPTool {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: 'object';
+      properties: Record<string, any>;
+      required: string[];
+    };
+  };
+}
+
+export interface Context7Request {
+  libraryName: string;
+  topic?: string;
+  tokens?: number;
+}
+
+export interface FirecrawlRequest {
+  url?: string;
+  urls?: string[];
+  query?: string;
+  formats?: string[];
+  onlyMainContent?: boolean;
+  limit?: number;
+}
+
+export interface TavilyRequest {
+  query: string;
+  search_depth?: 'basic' | 'advanced';
+  include_domains?: string[];
+  max_results?: number;
+  urls?: string[];
+  extract_type?: 'content' | 'summary' | 'key_points';
+}
+
+export interface SupabaseRequest {
+  operation: 'query_suggestion' | 'schema_design' | 'optimization' | 'migration';
+  context: string;
+  table_name?: string;
 }
