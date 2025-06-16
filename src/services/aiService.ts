@@ -326,9 +326,9 @@ const MCP_TOOLS = [
   }
 ];
 
-// Helper function to flatten tools for OpenAI API
+// Helper function to return tools in correct format for OpenAI API
 function flattenTools(tools: typeof MCP_TOOLS) {
-  return tools.map(tool => tool.function);
+  return tools; // Return the tools array directly since it's already in the correct format
 }
 
 export class AIService {
